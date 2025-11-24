@@ -1,0 +1,116 @@
+Cloud Computing 20251005 class 7 VPC and EC2 Setup & Troubleshooting, Resource Mgmt, Linux Commands
+
+Network Architecture
+
+VPC: Change to  10.10.0.0/16
+Region: Oregon us-west-2k
+
+Public Subnet:
+AZ 1 10.10.1.0/24
+AZ 2 10.10.2.0/24
+AZ 3 10.10.3.0/24
+
+Private Subnet:
+AZ 1 10.10.11.0/24
+AZ 2 10.10.12.0/24
+AZ 3 10.10.13.0/24
+
+The above is the network architecture for the VPC. 
+This includes the VPC CIDR Block "/16" you will be using to create your subnets "/24", both public and private subnet IP addresses.
+Every public subnet will correlate to a private subnet.
+
+Create VPC:
+
+1. Select VPC and more, because we're doing more than the vpc
+2. Name tag auto-generate:  Name your VPC
+3. IPv4 CIDR Block info: Modify the CIDR Block to match your architecture
+4. IPv6 CIDR block: leave it alone, because we are working in IPv4
+5. Tenancy: Leave at default
+6. Number of public subnets: Match your architecture
+7. Number of private subnets: Match your architecture
+8. Customize subnet CIDR blocks: Click the disclosure triangle ">" and Customize your public and private subnets to correspond to each of the availibility zones 1, 2, and 3.
+9. Nat gateways($) Select Zonal, and choose in 1  AZ, because having a NAT gateway in every AZ costs $$$.  Thke NAT gateway provides a managed internet wxit point for the region , which allows private resources access to the internet from anu AZ within a VPC
+10. VPC endpoints: none
+11. dns options: 
+12. Additional Tags: Optional Identifier for organizational purposes. 
+13. Click Create VPC Button
+14. Scroll down and click Create VPC Button
+
+** DNS notes:The DNS hostnames attribute determines whether instances launched in the VPC receive public DNS hostnames that correspond to their public IP addresses.
+The DNS resolution attribute determines whether DNS resolution through the Amazon DNS server is supported for the VP
+Enable DNS hostnames: Turning them off and on the public address that your ec2 instances get turns them off and on.
+Enable DNS resolution: Turn on if within your VPC your EC2 instance have access to AWS DNS server.  
+
+15. Next, Create and Security Group and then the Instance, by going to the search bar and typing and selecting, "EC2" and first creating the Security Groups.  (security Groups) will contain your network settings/ the berhavior of your network.   
+16. Under Network & Security in the side pane, select Security Groups, and click the orange Create security Groups Button
+17. Basic Details-security group name: name it after your vpc
+18. Description: Tell what the security group is for>>>>                      
+19. VPC info: Click the disclosure triangle "↓"  and select the vpc that was created for this project.
+
+20. Create Public Inbound rule 1: Type-All ICMP-IPv4 (This is to ping)   Source-Anywhere-IPv4    Description: Optional
+21. Create Public Inbound rule 2: Type-HTTP                              Source-Anywhere-IPv4                                                  
+22. Create Public Inbound rule 3: Type-SSH                               Source-Anywhere-IPv4
+23. Outbound rules: DO NOT TOUCH!!!!
+24. Tags Optional: Add New Tag- OPTIONAL.                                KEY:                    VALUE:
+25. Click the orange Create security Group Button
+
+26. Go back to the Network & Security in the side pane, select Security Groups, and click the orange Create security Groups Button
+
+27. Basic Details-security group name: This time give it the private version of the vpc's name by copying the public vpc's name, so that you can paste and modify it.
+28. Description: Tell what the security group is for                      
+29. VPC info: Click the disclosure triangle "↓" and select the vpc that was created for this project.
+
+30. Create Private: Inbound rule 1: Type-All ICMP-IPv4 (This is to ping)   Source-Anywhere-IPv4    Description: PING (Optional)
+31. Create Private: Inbound rule 2 Type-HTTP                               Source-Anywhere-IPv4    Description: HTTP (Optional)                   
+32. Tags Optional: Add New Tag- OPTIONAL.                                KEY:                    VALUE:
+33. Click the orange Create security Group Button
+
+34. First, create the public Instance by  clicking instance in the side pane.
+35. Name the public instance to correlate with the vpc
+36. Go down to Key pair (login) click create public key pair, and name it after your vpc
+37. Go to Network settings an click the edit button
+38. Select the vpc for this project
+39. Select the public subnet you want to use
+40. Enable auto-assign public IP
+41. Firewall security group: select existing security group - choose the public security group
+42. Go to Advanced details, click the disclosure triangle "↓", scroll down to User data - optional, and paste the Github script inside of the field
+43. Review, verify and click the orange launch instance button , let it initialize and begin creating the private instance.
+
+45. Next, create the private Instance by  clicking instance in the side pane.
+50. Name the private instance to correlate with the vpc
+51. Go down to Key pair (login) You don't need a key pair in a private
+52. Go to Network settings an click the edit button
+53. Select the vpc for this project
+54. Select the private subnet that correspinds to the public subnet you chose previously.
+55. Disable auto-assign public IP
+56. Firewall security group: select existing security group - choose the public security group
+57. Go to Advanced details, click the disclosure triangle "↓", scroll down to User data - optional, and paste the Github script inside of the field
+58. Review, verify and click the orange launch instance button , let it initialize and begin creating the private instance.
+
+You can check to see if an istance is working correctly by using instance connect and http
+59. To check if your public instance is working correctly, first select it and then go down to the details tab and copy the public dns address
+60. Open a new a new tab, type htp://, and then paste the publicv dns address inside of the field
+
+61. The next way to check is to  select the public instance, then connect to it annd then ping 8.8.8 -c 
+62. Select the instancce, and the choose connect.
+63. Ping Google's DNS by typing 8.8.8. -c5 to ping 5 times and stop and to verify that we can connect to the internet.   
+
+64. Check to see if your private instance is working correctly, first select it and then go down to the details tab and copy the Private IPv4 addresses
+65. Open the tab where you pinged the public instance,type ping then paste the private IPv4 address -c5
+66. The 5 pings tells us that icmp on IPv4 on the private instance is working and the server is alive.  If it were dead, we would recieve 5 timeout messages. 
+
+67. We can go back to instance connect and make sure the script is working.  We are going to do a curl to a website
+68. Select the private instance again to ping the private from the public.  Type curl, paste the private IPv4 address:80. Press enter, and the script should show up 
+
+Start Tear Down by Tear down.  Think in terms of dependencies like who is using who.  The instances are using the VPCs, so the instances must go first.  
+69. Terminate instances
+70. Get rid of Gateways, so go to VPC, then NAT gateways, select NAT gateways and delete Nat gateway
+71. Release the Elastic IP address
+*Side Notes*
+You cannot log into an instance run commands without ssh
+You cannot ssh into an EC2, because it is inside of a private subnet. Only resources inside of the vpc can talk to it. 
+A Bastion Host is also known as a jump box.
+Defense and depth is a cyber security technique that is based on the assumption that someone can accidentally incorrectly set up a security measure, or a security measure will fail.  So having multiple distinct security measures that cover the same thing is a best practice. So, since a private vpn is not routable to the internet and someone breaks that setting or maybe a malicious actor gets around it somehow.  There will be a firewall rule that wouldn't allow people outside of the VPC to communicate with the private instance.  So, you could actually add SSH as an inbounnd rule into a private instance by using the public instance and SSH into it first, and then tell the public instance to SSH into the private instance.  In this case, the private instance is what is called a Bastion Host of jump box.
+You can change a vpc's private securty group's  Inbound rules source to allow traffic from the public instance to come in by changing the source to custom and add 10.10.0.0/16 because that is the range of the vpc cidr Block
+Pinging allows you to see if a web server is up 
+Environment = Its type or what it is        Value = What that attribute is      Example: Key - Name         Value - Mark
