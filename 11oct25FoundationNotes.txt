@@ -1,0 +1,127 @@
+Cloud Computing 20251011 class 7 VPC Architecture, Security Groups, Bastion Hosts, RDP, Teardown 
+https://youtu.be/mRTEBRuzeWc?si=TlP6XQprTauAOIbA
+
+Objective: Craft network architecture, create vpc,create windows ec2 within the vpc,and remote into the Windows server via RDP
+
+
+
+Definitions:
+
+A Bastion Host is an designated intermediary between the public internet and the private subnets of  your vpc.
+Example: To access the resource inside of the vpc, you'd first have to come through the internet gateway, then through the router, then into the aws vpc.  Next you would access the application inside of the public subnet because you want to talk to it.  The application would only talk to the data inside of th private subnet.  
+This is where the Bastion Host/ Jump server comes in order to access a publicv server in a company's infrastructure to then access a private information or information in private subnets within that company's infrastructure. This is important, because corporations need to protect very sensitive information so both internal and external people have the ability to access information in private subnets  without actually touching or getting their hands on information that's inside of that private subnet.
+:You will need a password to get into the Bastion Host, but you will also need a password to get into any ec2 instance. 
+I used the analogy of going to a speak easy, but you need certain credentials to abe approved to access the GOOD STURFF!
+
+Network Architecture
+1:07:00 - 1:18:00 In depth discussion on  Network Architecture and Infrastructure
+
+
+Region: us-2-west
+
+VPC: 10.191.0.0/16  (CIDR block)
+
+Public:     10.191.1.0/24
+            10.191.2.0/24
+            10.191.3.0/24
+            10.191.4.0/24
+
+Private:    10.191.11.0/24 
+            10.191.12.0/24
+            10.191.13.0/24
+            10.191.14.0/24      
+
+            10.191.21.0/24 
+            10.191.22.0/24
+            10.191.23.0/24
+            10.191.24.0/24
+
+Build VPC      
+
+1. Create vpc
+2. vpc and more
+3. auto-generate Name vpc -11oct25
+4. CIDR block: 10.191.0.0/16
+5. Number of AZs = 3
+6. Number of public subnets = 3
+7. Number of private subnets = 6
+8. Customize subnets CIDR blocks - Open VpC Preview to copy and paste the CIDR blocks
+9. NAT gateway - in 1 AZ, because $$
+10. VPC endpoints - none
+11. Click Create VPC 
+
+RDP - is short for remote desktop protocol.  This is port 3389 and it is used to connect to windows server/machines.The windows server will serve as the Bastion Host and we will connect to it using RDP 
+This is primarily for Linux and Mac devices. They have dot install the RDP client to RDP
+
+1:30:02 Review VPC Resource Map
+Analyze the subnet architecture diferentiat between the public and private subnets.  
+identify the route tables.  
+Go to Network Connections to see the that the IGW is connected to (public subnets)
+Now look at the NAT Instance, kwhich connects your  private networks
+
+Build the Public Security groups
+
+12. Go to EC2, click network settings, then click security Groups
+13. Basic Details - Name your Public security Group After the vpc
+14. Copy and paste this information into the Description 
+15. VPC info - "↓" Choose the VPC you created
+16. Inbound Rule - RDP      Source - IPv4       Description - Connects to Windows Server
+
+17. Go to EC2, click network settings, then click security Groups
+18. Basic Details - Name your Private security Group After the vpc
+19. Copy and paste this information into the Description 
+20. VPC info - "↓" Choose the VPC you created
+21. Inbound Rule - SSH                Source - Anywhere IPv4                       Description - SSH
+22. Inbound Rule - HTTP               Source - Anywhere IPv4                       Description - webserver
+23. Inbound Rule - All ICMP-IPv4      Source - Custom ([private sg])               Description - PING
+24. Click create security group
+
+Note:(Advanced) Save for future reference. If a VPC's infrastructure is IGW → Router → Public Subnet → Private subnet
+If you are trying to limit acces to the private subnet from only traffic coming from the public subnet and not from the public internet via the IGW, 
+when you select All ICMP IPv4 as a rule you select the source as custom and choose the security group within the vpc
+For now, if you are confused when creating Inbound rules, always use Anywhere IPv4
+
+Build Windows Server:
+
+25. Go to EC2 
+26. Click Orange button to an Instance
+27. Name and Tags → Name:  Name the instance after the vpc - Windows - Bastion
+28. Applications and OS images (kAmazon Machine Image) → Windows
+29. Amazon Machine Image (IAM) ↓ Select Microsoft Windows Server 2025  FREE TIER, then click on the windows button
+30. Scroll down to Instance Type and choose the server size, use t3 medium or t3 large.  Make sure that it is tleast 2vCPU and 8 Gig of memory
+
+Key pair (login) When you create a windows server for AWS, it automatically creates an admin pass that is locked behind a key pair. You need that keypair to decrypt that passweord that aws has.  Now, we can grab the actual password and enter it into our computers.  
+
+31 Create Key pair - Name it after the vpc, then click on the ornange button to create the keypair. 
+It will download to your computer.  
+32.Network Settings :Edit → Select the VPC you created
+33. Choose a public subnet
+34. Auto-asign public IP : Enable
+35. Firewall (security group) → select existing security group → (public that you created)
+36. Launch Instance → Review Instance Summary
+37. Connect  → RDP Client → Download Remote Desktop File (RDP), if prompted keep the file.
+38. Connection Type: Connect using RDP client  → keep
+* When prompted, connect to your instance using the following username and password: Public DNS - ec2...        username info: administrator
+39. Get password: (You will need the private key file (.peim) to get the password) → upload → open → ( this will fill in the blank text field)  → decrypt password
+40. Raw copy the password (copy and paste your username and password in your Architecture/Infrastructure Notes .txt file for use later)
+41. Now you can connect to the instance. 
+42. Go back to Instance → Connect → Start menu → Type Remote Desktop Protocol → Click on Remote Desktop Connection
+43. Click ↓ , then raw copy Public DNS , paste into Remote Desktop Connection → Connect → Enter your credentials: Paste in you credentials saved in your architecture/infrastructure .txt file. 
+44. Disconnect RDC
+
+Tear Down:
+45. Select Windows Bastion instance → Instance State → Terminate Instance
+46. Go to VPC → NAT gateway → delete nat  gateway  (After you delete the NAT Gateway, takes 3 -5 minutes to release the IP, so until that NAT Gateway is gone and is not associated with the IP address we wont be able to get rid of the elastic ip address )
+47. Go to Elastic ip addresses → Actions → Release Elastic IP addresses →  (takes 3 -5 minutes for this, so be patient)
+48. Delete VPC: Actions → Delete vpc
+49. Refresh and verify that each resource has been deleted.  
+
+Security Groups → Select both public and priviate → delete security groups
+
+2:02:00 - 2:08:00
+Mr. Cooper's question on which particular public subnet to choose.   which subnet to put your Bastion host inside of. 
+
+Rob's reply: This involves a discussion about route tables, so he does a deep dive into the vpc resource map to review how it works.  The public route table connects to the internet via the NAT gateway. The private route tables connect to the NAT. This means that everything inside of the vpc should be able to talk to each other based on its private ip address. 
+
+Aaron's reply: Open up the route table and takes a deeper dive discussing whether subnets within a vpc can talk to each other, refer to the details of a particular route table and look at the Explicit subnet associations. Examine the Routes - destinaion. Look at the the vpc /16 CIDR range, 10.214.00/16.  This means tha anytime anything in a subnet has this particular route table attached to it, So, if any IP address that starts with  10.214.0.0/16 (10 = lprivate  - 214 = a specific vpc CIDR range) Since 10.214 is the entire cidr range, every private ip inside of this vpc MUST start with 10.214.  This means tha anytime anything tries to tald to anything in the vpc, it's going to send it to the local (target) meaning, stay inside of the vpc
+
