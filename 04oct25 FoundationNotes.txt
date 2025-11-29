@@ -1,0 +1,198 @@
+2nd VPC = VIRTUAL PRIVATE CLOUD
+VIDEO: https://youtu.be/UoN0158a4jg?si=Dx3qqalUmXcXc-Yk
+
+CIDR Ranges are just a way to list a range of IP addresses. In setting a VPC's CIDR range, all subnets get their own CIDR ranges as well but they must be inside of the VPC CIDR range.
+
+Subnets exist inside of availability zones, so you must check the region you're building the vpc in to know the number of availability zones.
+
+In AWS, public and private subnets aren't different. The only difference between them is that public subnets have full access to the internet, while private subnets are limited in a specific way or have no internet access for the sake of security.
+
+Building Infrastructure/Architecture for VPC in the Cloud:
+When building a VPC, the VPC CIDR range is the first thing you determine.  /8 means the last octets can change and /16 means the last 2 octets can change. The root of the tree will be the /16 and the branches will be /24.  The third octet in public subnets will be a single digit, while the 3rd octet in private subnets will be a double-digit number.  Below are 6 subnets across 3 availability zones; 3 public and 3 private.
+
+vpc	10.10.0.0/16	subnet		AZ1		AZ2		AZ3
+ 			public		10.10.1.0/24	10.10.2.0/24	10.10.3.0/24
+ 			private		10.10.11.0/24	10.10.12.0/24	10.10.13.0/24
+
+Every region will have a VPC in it.  There is no charge for having VPC, but certain resources have charges associated with them.  The CIDR range, 172.31.0.0, is always assigned to the default VPCs. vpc exists in regions, so a VPC in one region doesn't affect VPCs in other regions, unless you're trying to connect VPCs.
+
+55:00
+Go into the console and explore the default VPC as he is giving the guided tour.
+
+Details Tab:
+  My default VPC ID in Ohio ends with do6
+
+Resource Map Tab:
+This shows the things that exist inside of the VPC.
+vpc subnets and their AZs, subnet ids, and the path to the route table they are connected to, and the other network they are connected to besides the VPC with an IGW.
+
+cidr tab:
+shows the default CIDR range associated with the VPC
+
+Flow Logs Tab:
+Will be discussed later.
+
+Tags Tab:
+Unique Identifiers
+
+
+59:24
+Internet Gateways (IGW)
+the purpose of the igw is to let public traffic come in and out of the vpc.  It exists on the border of the vpc and the public internet. Private traffic is communication between resources inside of the vpc
+
+public subnets by definition have access to the internet and have both private and public ip addresses.
+
+Private ip addresses are used for communication inside of the VPC.  Any communication outside of the VPC is going to be public traffic and the internet gateway provides access to.  EC2s have private IP addresses attached to them inside of the VPC,  You can tell the difference between the EC2's private IP addresses and their public IP addresses, because the public IP addresses look totally different from the private ones.   The internet gateway converts the private IP address to a public IP address.  The when it talks to the internet, when it's outside of the VPC it will use the public IP address
+
+1:10:00 Locker Room Analogy for IGW.
+⦁	All private internal addresses start with 192, 172, or 10 and only communicate internally
+⦁	Private subnets have one ip address, but the ability to gain a second, via attaching a NAT Gateway.
+⦁	Adding a NAT Gateway allows a private subnet to talk to the internet when it goes through the NAT Gateway, but it does not let the public internet talk to the ec2 inside of the private subnet.
+
+
+The NAT Gateway is a virtual computer set up by AWS
+⦁	If you have a VPC with 2 AZS, and both AZS each have a public and private subnet, but the private subnet in az1 also has a NAT gateway, the private subnet in AZ2 can also use the NAT gateway in public az1.
+⦁	However, if AZ1 goes down, it creates an availability problem. So putting an NAT Gateway in az2's public subnet improves the availability of the VPC.
+⦁	 This VPC has both a IGW and a NAT gateway and local traffic, but we need a way to tell AWS communication rules like when the ec2 instances are trying to  talk to particular sets of IP addresses they can use the internet gateway. Or when they are trying to talk to another set of ip addresses, they must use the NAT gateway because they must stay inside of the VPC.  They don't get to leave. This applies to other devices they are trying to communicate with. These are functions of route tables.
+
+⦁	Route Tables are a list of rules.  Route tables have destinations and targets.  Multiple subnets can use one route table.
+
+ 	Destination- 172.31.0.0/16 = default vpc cidr range.
+
+ 	Destination- 0.0.0.0 = default gateway or default route, which means that any traffic that doesn't fall into the 172.31.0.0/16 range, falls into 0.0.0.0 route which is the internet gateway.
+ 
+ 	Target - local = stay inside of this VPC.
+
+In summation, If an EC2 inside of a vpc is trying to talk to an ip address inside of 172.31.0.0/16, the traffic is routed to stay inside of the VPC.  So, if we are trying to send traffic to something that doesn't fall into the pattern of 172.31.0.0/16 it needs to go to the igw.
+
+⦁	There are 2 ways to make a public route table into a private route table.
+ 
+ 	1. Remove the public route table rule
+ 	2. Replace the igw with a nat gateway, which would atleast allow the ec2 instances to be able to receive updates.
+
+1:46:00 Create a VPC
+
+In aws, route tables, igw, and nat gateways are separate objects.  The vpc wizard includes them all. However, when not working inside of the console you create them manually.
+
+1.	Create vpc
+2.	Select VPC and more.  This automatically lays out some subnets and route tables in the preview.
+3.	Fill in the name tag auto-generation and name your VPC
+4.	IPv4 CIDR block: Use your /16	CIDR range that you used to create your subnets.
+5.	ipv6 cidr block- select no IPv6 CIDR block, because we're using ipv4
+6.	Tenancy - leave alone to the default setting.
+7.	Number of AZs- choose based on the region you are creating your VPC in.
+8.	Number of public subnets - it gives the option of 0 and 3. Select 3, because they only want 1 public subnet in each availability zone
+9.	Number of private subnets - choose 3
+10.	Open the drop-down menu for customizing subnet CIDR ranges.  Read it carefully and refer back to the custom VPC architecture you designed and fill in the fields based on your architecture. Remember to change the "/" to /24.
+11.	Double-check the values before moving on.
+12.	Nat gateway- choosing in 1 az will have the nat gateway placed randomly in one of the azs in the public for a lower cost.  This means that if that AZ goes down, then all of the private subnets lose access to the internet.  However, if we choose 1 per az, it increases both the availability and the costs.
+13.	vpc end points - choose none today, because they weren't talked about. It automatically defaults to having an  S3 gateway
+14.	Examine the resource map. Each subnet has both a public and a private subnet. The public route table is the same for all of the public subnets, because 1 route table can service multiple subnets. Now slide over to the network connections.  You should see an IGW and a NAT gateway that tells you which AZ has the NAT gateway. Remember, all private subnets in the VPC are allowed to use that NAT gateway if they have been routed to that gateway.
+15.	Click the orange button to create vpc.
+16.	While your vpd is spinning to set up, you should see resources that the wizard created.  If you see any red, go back and fix it.
+ 
+ 
+ 
+⦁	In the subnet map, you can determine if the subnet has a IGW by looking under the internet connection section
+
+2:13:00
+You don't have to tear down vpc's but you must tear down nat gateways, because you will be charged for them.
+
+2:31:00
+VPC Dashboard Walk Through
+⦁	vpc
+⦁	subnets
+⦁	private route tables for each subnet
+⦁	1 public route table that is shared by all the  subnets in the vpc that goes to the internet gateway
+
+2:32:00
+Route Table Walk Through
+⦁	 Route table Id - click the links to investigate the routes for its destination.
+
+Now that the VPC is set up, it is now time to create an EC2 instance.
+
+2:33:55
+
+
+1.	Create EC2
+2.	Create security group 1 (public) and its description.
+3. Vpc Info - click the drop-down to scope the  security group to the correct vpc, (not default)
+4. Add 3 inbound rules.  (all built in rules
+ 	All ICMP -IPv4 - Lets the ec2 get pinged
+ 	HTTP - Connects to the internet
+ 	SSH -  Used for ec2 instance connect
+ 	Source: All 3 Anywhere IPv4
+5. Click the orange button to create the security group.
+6 Inspect your security group.
+
+7.Create security group 2 (private) and its description.
+8. Vpc Info - click the drop-down to scope the  security group to the correct vpc (not default)
+
+9. Add 1 inbound rule, because it's private (ICMP-IPv4) and source anywhere IPv4.
+10. Click the orange button to create the security group.
+
+Now it is time to launch an instance
+
+11. Go to instances
+12. Click the orange button to Launch Instance (this one will go in a public subnet
+13 Name the instance
+14.Go down to key pair and give it a key pair
+15. Go down to network settings and click the edit button.
+16 VPC-required - choose the vpc you created.
+17. Subnet - choose a public subnet.  The name gives it away, but if the 3rd octet is a single digit that is also an indicator that it is a public subnet.
+18. Auto assign public IP - Enable
+19. Firewall (Security Groups) - select existing security group.
+20. Common security groups - select public
+21. Go down to advanced details, all the way down to the user data field.
+22. Get the bmc4 repo, click the EC2 script, copy the script, and paste it in the user data field.
+23. Review before launching
+ 	Public Namne
+ 	AMI(Amazon Machine Image) - Amazon Linux 2023
+ 	Instance Type - T3 micro
+ 	Keypair optional
+ 	Network Settings - should be in the vpc that  was created, subnet should be one of the public ones created, auto assign public IP- enabled, public security group w/  3 inbound rules, and start up script.
+24. Click the orange button to Launch Instance
+25. Click the instance to analyze it.  Notice that it has a public ip address.
+26. Click the check box.
+27. Go down to the details tab and raw copy the public dns link
+28. Open a browser tab and paste the URL into the field to launch the website.
+
+3:00:00 - 3:30:55
+Troubleshooting
+
+3:31:00
+SSH into the Public Instance
+
+1.	Get the private IP address of the private instance by checking off the private instance, then going into details, raw copy the Private  IPv4  address, and store it for later.
+2.	Check off the public instance, click connect, review connect information, and click the orange button to connect.  
+3.	Click the EC2 instance connect tab.  
+4.	Type: ping -c 10 8.8.8.8 Ctrl c stops the ping
+5.	Go back to instances and examine the details tab, select the private instance, and notice that both the public DNS and public ipv4 categories are blank.  This is because it is in a private subnet, so it doesn't have a private IP address.   
+6.	Check to see if the public instance and the private instance can talk to each other by going to instance connect tab and clear the terminal. 
+7.	ping without using google.  ping -c 5(paste private ip address) press enter. *SSH CAN ONLY WORK WITH INSTANCES IN PUBLIC SUBNETS
+8.	Clear the terminal.  There is a web server running in our private instance. If we want to load that page, we could use the public instance by running a curl command.  curl = download the webpage. 
+9.	$ curl (paste private IP address)   
+
+3:46:12
+VPC Tear Down.   git 
+
+1.	Click instances
+2.	Select both instances.  
+3.	Go to the instance state and terminate both instances
+4.	Now go to the VPC console
+5.	Go to NAT Gateways, select the NAT gateway, then actions, confirm deletion, and then wait until it is completely deleted before you can release the Elastic IP. 
+6.	Click Elastic IPs in the left pane
+7.	Select the elastic IP address, then click actions, and release the elastic IP address
+8.	Now go to the VPC console
+9.	Choose actions and select Delete VPC.
+10.	Confirm by typing: delete
+
+
+
+Extra Note
+(NAT gateways have their own public IP address, which is an elastic IP address.  The private instances use the NAT gateway they are still are talking to the internet, so they have to use somebody's public Ip address.   The NAT gateway has only one public IP address, whereas the IGW has several public IP addresses.  and those are the ones that each ec2 instance would get.
+
+Note to Self: Create your project inside of VS Code, then create the text file that will be used for notes.  Add content to the file, and then save it in VS Code.  Now you can go into the text editor and complete the work.  Saving the work in text editor will automatically update it in VS Code as well.
+
+
+
