@@ -45,8 +45,8 @@ Build VPC
 5. Number of AZs = 3
 6. Number of public subnets = 3
 7. Number of private subnets = 6
-8. Customize subnets CIDR blocks - Open VpC Preview to copy and paste the CIDR blocks
-9. NAT gateway - in 1 AZ, because $$
+8. Customize subnets CIDR blocks - Open VPC Preview to copy and paste the CIDR blocks
+9. NAT gateway - in 1 AZ, because it costs $$
 10. VPC endpoints - none
 11. Click Create VPC 
 
@@ -54,10 +54,10 @@ RDP - is short for remote desktop protocol.  This is port 3389 and it is used to
 This is primarily for Linux and Mac devices. They have dot install the RDP client to RDP
 
 1:30:02 Review VPC Resource Map
-Analyze the subnet architecture diferentiat between the public and private subnets.  
-identify the route tables.  
+Analyze the subnet architecture diferentiate between the public and private subnets and identify the route tables.  
+
 Go to Network Connections to see the that the IGW is connected to (public subnets)
-Now look at the NAT Instance, kwhich connects your  private networks
+Now look at the NAT Instance, which connects your private networks
 
 Build the Public Security groups
 
@@ -86,7 +86,7 @@ Build Windows Server:
 25. Go to EC2 
 26. Click Orange button to an Instance
 27. Name and Tags → Name:  Name the instance after the vpc - Windows - Bastion
-28. Applications and OS images (kAmazon Machine Image) → Windows
+28. Applications and OS images (Amazon Machine Image) → Windows
 29. Amazon Machine Image (IAM) ↓ Select Microsoft Windows Server 2025  FREE TIER, then click on the windows button
 30. Scroll down to Instance Type and choose the server size, use t3 medium or t3 large.  Make sure that it is tleast 2vCPU and 8 Gig of memory
 
@@ -102,7 +102,7 @@ It will download to your computer.
 37. Connect  → RDP Client → Download Remote Desktop File (RDP), if prompted keep the file.
 38. Connection Type: Connect using RDP client  → keep
 * When prompted, connect to your instance using the following username and password: Public DNS - ec2...        username info: administrator
-39. Get password: (You will need the private key file (.peim) to get the password) → upload → open → ( this will fill in the blank text field)  → decrypt password
+39. Get password: (You will need the private key file (.pem) to get the password) → upload → open → (this will fill in the blank text field)  → decrypt password
 40. Raw copy the password (copy and paste your username and password in your Architecture/Infrastructure Notes .txt file for use later)
 41. Now you can connect to the instance. 
 42. Go back to Instance → Connect → Start menu → Type Remote Desktop Protocol → Click on Remote Desktop Connection
