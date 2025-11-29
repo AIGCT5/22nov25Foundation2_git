@@ -1,5 +1,10 @@
-2nd VPC = VIRTUAL PRIVATE CLOUD
+Cloud Computing 20251004 class 7 THE BORG VPC CIDR and Networking, Security Groups, EC2 Deployment
 VIDEO: https://youtu.be/UoN0158a4jg?si=Dx3qqalUmXcXc-Yk
+
+Objective: create CIDR ranges, network architecture, build subnets, security groups and deploy ec2s inside of a vpc 
+
+Definitions:
+VPC = VIRTUAL PRIVATE CLOUD
 
 CIDR Ranges are just a way to list a range of IP addresses. In setting a VPC's CIDR range, all subnets get their own CIDR ranges as well but they must be inside of the VPC CIDR range.
 
